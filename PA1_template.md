@@ -13,10 +13,10 @@
   raw_data <- read.csv("activity.csv")
 
   ## Aggregate the raw data as sum of steps per day
-  steps_per_day <- aggregate(steps ~ date, data = raw_data, FUN=sum)
+  total_steps_per_day <- aggregate(steps ~ date, data = raw_data, FUN=sum)
 
-  ## Aggregate the raw data as sum of steps per interval
-  steps_per_interval <- aggregate(steps ~ interval, data = raw_data, FUN=sum)
+  ## Aggregate the raw data as average of steps per interval
+  average_steps_per_interval <- aggregate(steps ~ interval, data = raw_data, FUN=mean)
 ```
 
 
@@ -25,7 +25,7 @@
 
 ```r
   ## Draw a histogram of the steps recorded per day
-  hist(steps_per_day$steps, main = "Steps taken per day", xlab = "Steps", col="blue")
+  hist(total_steps_per_day$steps, main = "Steps taken per day", xlab = "Steps", col="blue")
 ```
 
 ![](./PA1_template_files/figure-html/steps_per_day-1.png) 
@@ -45,8 +45,11 @@ The mean of the recorded step data per day is 10766.19 (rounded to two decimal p
 
 ```r
   ## Draw a line graph of the steps recorded per interval
-  with(steps_per_interval, plot(interval, steps, type = "n", main = "Steps taken per interval", xlab = "Interval", ylab = "Steps"))
-  with(steps_per_interval, lines(interval, steps, type="l"))
+  with(average_steps_per_interval,
+       plot(interval, steps, type = "n",
+            main = "Steps taken per interval",
+            xlab = "Interval", ylab = "Steps"))
+  with(average_steps_per_interval, lines(interval, steps, type="l"))
 ```
 
 ![](./PA1_template_files/figure-html/steps_per_interval-1.png) 
@@ -54,11 +57,11 @@ The mean of the recorded step data per day is 10766.19 (rounded to two decimal p
 
 ```r
   ## Subset the interval with most steps
-  max_steps <- max(steps_per_interval$steps)
+  max_steps <- max(average_steps_per_interval$steps)
   max_interval <- subset(steps_per_interval, steps == max_steps)$interval
 ```
 
-The interval with most steps is interval 835 with 10927 recorded steps.
+The interval with most steps is interval  with 206.1698 recorded steps on average (rounded to four decimal places).
 
 
 ## Imputing missing values
@@ -69,7 +72,9 @@ The interval with most steps is interval 835 with 10927 recorded steps.
   number_na <- sum(is.na(raw_data$steps))
 ```
 
-There are 2304 invalid data points in the data set. To compensate for those unrecorded data points, we're calculating a derived data set, where invalid values are replaced by the mean for the respective interval.
+There are 2304 invalid data points in the data set.
+
+To compensate for those unrecorded data points, we're calculating a derived data set, where invalid values are replaced by the mean for the respective interval.
 
 
 ```r
@@ -113,7 +118,7 @@ Since invalid data has the same impact to a sum as a zero-value, the histogram w
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
-The weekdays have a significant spike in the morning and a few more less prominent spikes in typical break or knocking-off times. The weekend seems quite balanced during the day in comparison, especially in the morning.
+The weekdays have a significant spike in the morning and a few less prominent spikes during typical break or knocking-off times. The weekend seems quite balanced during the day in comparison, especially in the morning.
 
 
 ```r
@@ -122,7 +127,8 @@ The weekdays have a significant spike in the morning and a few more less promine
   raw_data$weekend_indicator <- wday_classifier[as.POSIXlt(raw_data$date)$wday + 1]
 
   ## Aggregate the raw data as sum of steps per interval
-  steps_per_interval_compared <- aggregate(steps ~ interval + weekend_indicator, data = raw_data, FUN=sum)
+  steps_per_interval_compared <- aggregate(steps ~ interval + weekend_indicator,
+                                           data = raw_data, FUN=mean)
 ```
 
 

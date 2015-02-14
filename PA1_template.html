@@ -68,15 +68,15 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
   raw_data &lt;- read.csv(&quot;activity.csv&quot;)
 
   ## Aggregate the raw data as sum of steps per day
-  steps_per_day &lt;- aggregate(steps ~ date, data = raw_data, FUN=sum)
+  total_steps_per_day &lt;- aggregate(steps ~ date, data = raw_data, FUN=sum)
 
-  ## Aggregate the raw data as sum of steps per interval
-  steps_per_interval &lt;- aggregate(steps ~ interval, data = raw_data, FUN=sum)</code></pre>
+  ## Aggregate the raw data as average of steps per interval
+  average_steps_per_interval &lt;- aggregate(steps ~ interval, data = raw_data, FUN=mean)</code></pre>
 </div>
 <div id="what-is-mean-total-number-of-steps-taken-per-day" class="section level2">
 <h2>What is mean total number of steps taken per day?</h2>
 <pre class="r"><code>  ## Draw a histogram of the steps recorded per day
-  hist(steps_per_day$steps, main = &quot;Steps taken per day&quot;, xlab = &quot;Steps&quot;, col=&quot;blue&quot;)</code></pre>
+  hist(total_steps_per_day$steps, main = &quot;Steps taken per day&quot;, xlab = &quot;Steps&quot;, col=&quot;blue&quot;)</code></pre>
 <p><img src="PA1_template_files/figure-html/steps_per_day-1.png" /></p>
 <pre class="r"><code>  ## Calculate the mean and median values of the steps recorded per day
   mean_steps_per_day &lt;- mean(steps_per_day$steps, na.rm = FALSE)
@@ -86,19 +86,23 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <div id="what-is-the-average-daily-activity-pattern" class="section level2">
 <h2>What is the average daily activity pattern?</h2>
 <pre class="r"><code>  ## Draw a line graph of the steps recorded per interval
-  with(steps_per_interval, plot(interval, steps, type = &quot;n&quot;, main = &quot;Steps taken per interval&quot;, xlab = &quot;Interval&quot;, ylab = &quot;Steps&quot;))
-  with(steps_per_interval, lines(interval, steps, type=&quot;l&quot;))</code></pre>
+  with(average_steps_per_interval,
+       plot(interval, steps, type = &quot;n&quot;,
+            main = &quot;Steps taken per interval&quot;,
+            xlab = &quot;Interval&quot;, ylab = &quot;Steps&quot;))
+  with(average_steps_per_interval, lines(interval, steps, type=&quot;l&quot;))</code></pre>
 <p><img src="PA1_template_files/figure-html/steps_per_interval-1.png" /></p>
 <pre class="r"><code>  ## Subset the interval with most steps
-  max_steps &lt;- max(steps_per_interval$steps)
+  max_steps &lt;- max(average_steps_per_interval$steps)
   max_interval &lt;- subset(steps_per_interval, steps == max_steps)$interval</code></pre>
-<p>The interval with most steps is interval 835 with 10927 recorded steps.</p>
+<p>The interval with most steps is interval with 206.1698 recorded steps on average (rounded to four decimal places).</p>
 </div>
 <div id="imputing-missing-values" class="section level2">
 <h2>Imputing missing values</h2>
 <pre class="r"><code>  ## Count the number of NA data points
   number_na &lt;- sum(is.na(raw_data$steps))</code></pre>
-<p>There are 2304 invalid data points in the data set. To compensate for those unrecorded data points, we’re calculating a derived data set, where invalid values are replaced by the mean for the respective interval.</p>
+<p>There are 2304 invalid data points in the data set.</p>
+<p>To compensate for those unrecorded data points, we’re calculating a derived data set, where invalid values are replaced by the mean for the respective interval.</p>
 <pre class="r"><code>  ## Aggregate a data set of mean steps per interval
   mean_steps_per_interval &lt;- aggregate(steps ~ interval, data = raw_data, FUN=mean)
 
@@ -130,13 +134,14 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 </div>
 <div id="are-there-differences-in-activity-patterns-between-weekdays-and-weekends" class="section level2">
 <h2>Are there differences in activity patterns between weekdays and weekends?</h2>
-<p>The weekdays have a significant spike in the morning and a few more less prominent spikes in typical break or knocking-off times. The weekend seems quite balanced during the day in comparison, especially in the morning.</p>
+<p>The weekdays have a significant spike in the morning and a few less prominent spikes during typical break or knocking-off times. The weekend seems quite balanced during the day in comparison, especially in the morning.</p>
 <pre class="r"><code>  ## Add a weekend indicator variable to the raw data set
   wday_classifier &lt;- c(&quot;weekend&quot;, &quot;weekday&quot;, &quot;weekday&quot;, &quot;weekday&quot;, &quot;weekday&quot;, &quot;weekday&quot;, &quot;weekend&quot;)
   raw_data$weekend_indicator &lt;- wday_classifier[as.POSIXlt(raw_data$date)$wday + 1]
 
   ## Aggregate the raw data as sum of steps per interval
-  steps_per_interval_compared &lt;- aggregate(steps ~ interval + weekend_indicator, data = raw_data, FUN=sum)</code></pre>
+  steps_per_interval_compared &lt;- aggregate(steps ~ interval + weekend_indicator,
+                                           data = raw_data, FUN=mean)</code></pre>
 <pre class="r"><code>  ## We use the lattice system for this graph
   library(lattice)
 
