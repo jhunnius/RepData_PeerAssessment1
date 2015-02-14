@@ -1,14 +1,9 @@
----
-title: 'Reproducible Research: Peer Assessment 1'
-output:
-  html_document:
-    keep_md: yes
-    self_contained: no
----
+# Reproducible Research: Peer Assessment 1
 
 
 ## Loading and preprocessing the data
-```{r preprocessing}
+
+```r
   ## Unzip the archive if necessary
   if(! file.exists("activity.csv")) {
     unzip("activity.zip")
@@ -27,48 +22,57 @@ output:
 
 ## What is mean total number of steps taken per day?
 
-```{r steps_per_day}
+
+```r
   ## Draw a histogram of the steps recorded per day
   hist(steps_per_day$steps, main = "Steps taken per day", xlab = "Steps", col="blue")
 ```
 
-```{r}
+![](./PA1_template_files/figure-html/steps_per_day-1.png) 
+
+
+```r
   ## Calculate the mean and median values of the steps recorded per day
   mean_steps_per_day <- mean(steps_per_day$steps, na.rm = FALSE)
   median_steps_per_day <- median(steps_per_day$steps, na.rm = FALSE)
 ```
 
-The mean of the recorded step data per day is `r format(mean_steps_per_day, nsmall = 2)` (rounded to two decimal places). The median of the recorded step data per day is `r median_steps_per_day`.
+The mean of the recorded step data per day is 10766.19 (rounded to two decimal places). The median of the recorded step data per day is 10765.
 
 
 ## What is the average daily activity pattern?
 
-```{r steps_per_interval}
+
+```r
   ## Draw a line graph of the steps recorded per interval
   with(steps_per_interval, plot(interval, steps, type = "n", main = "Steps taken per interval", xlab = "Interval", ylab = "Steps"))
   with(steps_per_interval, lines(interval, steps, type="l"))
 ```
 
-```{r}
+![](./PA1_template_files/figure-html/steps_per_interval-1.png) 
+
+
+```r
   ## Subset the interval with most steps
   max_steps <- max(steps_per_interval$steps)
   max_interval <- subset(steps_per_interval, steps == max_steps)$interval
 ```
 
-The interval with most steps is interval `r max_interval` with `r max_steps` recorded steps.
+The interval with most steps is interval 835 with 10927 recorded steps.
 
 
 ## Imputing missing values
 
-```{r number_na}
+
+```r
   ## Count the number of NA data points
   number_na <- sum(is.na(raw_data$steps))
 ```
 
-There are `r number_na` invalid data points in the data set. To compensate for those unrecorded data points, we're calculating a derived data set, where invalid values are replaced by the mean for the respective interval.
+There are 2304 invalid data points in the data set. To compensate for those unrecorded data points, we're calculating a derived data set, where invalid values are replaced by the mean for the respective interval.
 
-```{r imputed_steps_per_day}
 
+```r
   ## Aggregate a data set of mean steps per interval
   mean_steps_per_interval <- aggregate(steps ~ interval, data = raw_data, FUN=mean)
 
@@ -93,13 +97,16 @@ There are `r number_na` invalid data points in the data set. To compensate for t
   hist(imputed_steps_per_day$steps, main = "Steps taken per day (with imputed data)", xlab = "Steps", col="blue")
 ```
 
-```{r}
+![](./PA1_template_files/figure-html/imputed_steps_per_day-1.png) 
+
+
+```r
   ## Calculate the mean and median values of the steps recorded per day
   imputed_mean_steps_per_day <- mean(imputed_steps_per_day$steps, na.rm = FALSE)
   imputed_median_steps_per_day <- median(imputed_steps_per_day$steps, na.rm = FALSE)
 ```
 
-The mean of the recorded step data per day is `r format(imputed_mean_steps_per_day, nsmall = 2)` (rounded to two decimal places). The median of the recorded step data per day is `r format(imputed_median_steps_per_day, nsmall = 0)` (rounded).
+The mean of the recorded step data per day is 10765.64 (rounded to two decimal places). The median of the recorded step data per day is 10762 (rounded).
 
 Since invalid data has the same impact to a sum as a zero-value, the histogram with imputed points shows higher frequencies (representing higher daily step sums) than the histogram based on the data set with invalid data points in it. The median and mean however are almost unchanged, since the invalid values don't influenced their calculation in neither data set.
 
@@ -108,7 +115,8 @@ Since invalid data has the same impact to a sum as a zero-value, the histogram w
 
 The weekdays have a significant spike in the morning and a few more less prominent spikes in typical break or knocking-off times. The weekend seems quite balanced during the day in comparison, especially in the morning.
 
-```{r weekend_indicator}
+
+```r
   ## Add a weekend indicator variable to the raw data set
   wday_classifier <- c("weekend", "weekday", "weekday", "weekday", "weekday", "weekday", "weekend")
   raw_data$weekend_indicator <- wday_classifier[as.POSIXlt(raw_data$date)$wday + 1]
@@ -117,7 +125,8 @@ The weekdays have a significant spike in the morning and a few more less promine
   steps_per_interval_compared <- aggregate(steps ~ interval + weekend_indicator, data = raw_data, FUN=sum)
 ```
 
-```{r weekend_comparison, warning=FALSE}
+
+```r
   ## We use the lattice system for this graph
   library(lattice)
 
@@ -125,3 +134,5 @@ The weekdays have a significant spike in the morning and a few more less promine
   xyplot(steps ~ interval | weekend_indicator, data = steps_per_interval_compared, type = "l",
         layout = c(1, 2))
 ```
+
+![](./PA1_template_files/figure-html/weekend_comparison-1.png) 

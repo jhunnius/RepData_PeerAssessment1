@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+<title>Reproducible Research: Peer Assessment 1</title>
+
+<script src="PA1_template_files/jquery-1.11.0/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link href="PA1_template_files/bootstrap-2.3.2/css/bootstrap.min.css" rel="stylesheet" />
+<link href="PA1_template_files/bootstrap-2.3.2/css/bootstrap-responsive.min.css" rel="stylesheet" />
+<script src="PA1_template_files/bootstrap-2.3.2/js/bootstrap.min.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<link rel="stylesheet"
+      href="PA1_template_files/highlight/default.css"
+      type="text/css" />
+<script src="PA1_template_files/highlight/highlight.js"></script>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+<div class="container-fluid main-container">
+
+
+<div id="header">
+<h1 class="title">Reproducible Research: Peer Assessment 1</h1>
+</div>
+
+
+<div id="loading-and-preprocessing-the-data" class="section level2">
+<h2>Loading and preprocessing the data</h2>
+<pre class="r"><code>  ## Unzip the archive if necessary
+  if(! file.exists(&quot;activity.csv&quot;)) {
+    unzip(&quot;activity.zip&quot;)
+  }
+
+  ## Read the csv data
+  raw_data &lt;- read.csv(&quot;activity.csv&quot;)
+
+  ## Aggregate the raw data as sum of steps per day
+  steps_per_day &lt;- aggregate(steps ~ date, data = raw_data, FUN=sum)
+
+  ## Aggregate the raw data as sum of steps per interval
+  steps_per_interval &lt;- aggregate(steps ~ interval, data = raw_data, FUN=sum)</code></pre>
+</div>
+<div id="what-is-mean-total-number-of-steps-taken-per-day" class="section level2">
+<h2>What is mean total number of steps taken per day?</h2>
+<pre class="r"><code>  ## Draw a histogram of the steps recorded per day
+  hist(steps_per_day$steps, main = &quot;Steps taken per day&quot;, xlab = &quot;Steps&quot;, col=&quot;blue&quot;)</code></pre>
+<p><img src="PA1_template_files/figure-html/steps_per_day-1.png" /></p>
+<pre class="r"><code>  ## Calculate the mean and median values of the steps recorded per day
+  mean_steps_per_day &lt;- mean(steps_per_day$steps, na.rm = FALSE)
+  median_steps_per_day &lt;- median(steps_per_day$steps, na.rm = FALSE)</code></pre>
+<p>The mean of the recorded step data per day is 10766.19 (rounded to two decimal places). The median of the recorded step data per day is 10765.</p>
+</div>
+<div id="what-is-the-average-daily-activity-pattern" class="section level2">
+<h2>What is the average daily activity pattern?</h2>
+<pre class="r"><code>  ## Draw a line graph of the steps recorded per interval
+  with(steps_per_interval, plot(interval, steps, type = &quot;n&quot;, main = &quot;Steps taken per interval&quot;, xlab = &quot;Interval&quot;, ylab = &quot;Steps&quot;))
+  with(steps_per_interval, lines(interval, steps, type=&quot;l&quot;))</code></pre>
+<p><img src="PA1_template_files/figure-html/steps_per_interval-1.png" /></p>
+<pre class="r"><code>  ## Subset the interval with most steps
+  max_steps &lt;- max(steps_per_interval$steps)
+  max_interval &lt;- subset(steps_per_interval, steps == max_steps)$interval</code></pre>
+<p>The interval with most steps is interval 835 with 10927 recorded steps.</p>
+</div>
+<div id="imputing-missing-values" class="section level2">
+<h2>Imputing missing values</h2>
+<pre class="r"><code>  ## Count the number of NA data points
+  number_na &lt;- sum(is.na(raw_data$steps))</code></pre>
+<p>There are 2304 invalid data points in the data set. To compensate for those unrecorded data points, we’re calculating a derived data set, where invalid values are replaced by the mean for the respective interval.</p>
+<pre class="r"><code>  ## Aggregate a data set of mean steps per interval
+  mean_steps_per_interval &lt;- aggregate(steps ~ interval, data = raw_data, FUN=mean)
+
+  ## Copy the data set
+  imputed_data &lt;- raw_data
+
+  ## For each interval, replace the NA values with the mean for the interval
+  for(interval in mean_steps_per_interval$interval) {
+
+    ## Subset and round the mean for the interval
+    interval_mean &lt;- mean_steps_per_interval[mean_steps_per_interval$interval == interval, 2]
+    rounded_mean &lt;- round(interval_mean)
+
+    ## Replace all NA values
+    imputed_data[is.na(imputed_data$steps) &amp; imputed_data$interval == interval, 1] &lt;- rounded_mean
+  }
+
+  ## Aggregate the imputed data as sum of steps per day
+  imputed_steps_per_day &lt;- aggregate(steps ~ date, data = imputed_data, FUN=sum)
+
+  ## Draw a histogram of the steps recorded per day
+  hist(imputed_steps_per_day$steps, main = &quot;Steps taken per day (with imputed data)&quot;, xlab = &quot;Steps&quot;, col=&quot;blue&quot;)</code></pre>
+<p><img src="PA1_template_files/figure-html/imputed_steps_per_day-1.png" /></p>
+<pre class="r"><code>  ## Calculate the mean and median values of the steps recorded per day
+  imputed_mean_steps_per_day &lt;- mean(imputed_steps_per_day$steps, na.rm = FALSE)
+  imputed_median_steps_per_day &lt;- median(imputed_steps_per_day$steps, na.rm = FALSE)</code></pre>
+<p>The mean of the recorded step data per day is 10765.64 (rounded to two decimal places). The median of the recorded step data per day is 10762 (rounded).</p>
+<p>Since invalid data has the same impact to a sum as a zero-value, the histogram with imputed points shows higher frequencies (representing higher daily step sums) than the histogram based on the data set with invalid data points in it. The median and mean however are almost unchanged, since the invalid values don’t influenced their calculation in neither data set.</p>
+</div>
+<div id="are-there-differences-in-activity-patterns-between-weekdays-and-weekends" class="section level2">
+<h2>Are there differences in activity patterns between weekdays and weekends?</h2>
+<p>The weekdays have a significant spike in the morning and a few more less prominent spikes in typical break or knocking-off times. The weekend seems quite balanced during the day in comparison, especially in the morning.</p>
+<pre class="r"><code>  ## Add a weekend indicator variable to the raw data set
+  wday_classifier &lt;- c(&quot;weekend&quot;, &quot;weekday&quot;, &quot;weekday&quot;, &quot;weekday&quot;, &quot;weekday&quot;, &quot;weekday&quot;, &quot;weekend&quot;)
+  raw_data$weekend_indicator &lt;- wday_classifier[as.POSIXlt(raw_data$date)$wday + 1]
+
+  ## Aggregate the raw data as sum of steps per interval
+  steps_per_interval_compared &lt;- aggregate(steps ~ interval + weekend_indicator, data = raw_data, FUN=sum)</code></pre>
+<pre class="r"><code>  ## We use the lattice system for this graph
+  library(lattice)
+
+  ## Draw line graphs of the steps recorded per interval, grouped by weekend indicator
+  xyplot(steps ~ interval | weekend_indicator, data = steps_per_interval_compared, type = &quot;l&quot;,
+        layout = c(1, 2))</code></pre>
+<p><img src="PA1_template_files/figure-html/weekend_comparison-1.png" /></p>
+</div>
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+$(document).ready(function () {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+});
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
